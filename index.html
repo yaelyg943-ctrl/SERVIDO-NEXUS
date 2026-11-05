@@ -92,9 +92,63 @@ function dateDiff(d){if(!d)return 9999;return Math.ceil((new Date(d+'T23:59:59')
 function statusOf(a){if(a.status==='Cancelado')return 'Cancelado';let d=dateDiff(a.expiry_date);return d<0?'Vencido':d<=7?'Por vencer':'Activo'}
 function badge(s){return `<span class="pill ${s==='Activo'?'ok':s==='Por vencer'?'warn':s==='Vencido'?'bad':'neutral'}">${esc(s)}</span>`}
 function wa(phone,msg){let p=String(phone||'').replace(/\D/g,'');if(p.length===10)p='52'+p;if(!p){toast('Agrega el WhatsApp del cliente en su ficha.');return}window.open('https://wa.me/'+p+'?text='+encodeURIComponent(msg),'_blank')}
+function formatDateMX(value){
+ if(!value)return '';
+ const parts=String(value).split('-');
+ return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value;
+}
+function durationLabel(a){
+ const months=Number(a.duration_months||0);
+ if(months===1)return '1 MES';
+ if(months>1)return `${months} MESES`;
+ if(a.start_date&&a.expiry_date){
+  const days=Math.max(1,Math.round((new Date(a.expiry_date+'T12:00:00')-new Date(a.start_date+'T12:00:00'))/86400000));
+  return `${days} DÍAS`;
+ }
+ return 'NO ESPECIFICADA';
+}
+function deliveryMessage(a){
+ const isProfile=a.mode==='Perfil';
+ const deviceLine=isProfile?'📱 1 DISPOSITIVO':'📱 CUENTA COMPLETA';
+ const profileLine=isProfile&&a.profile?`\n👤 *PERFIL:* ${a.profile}`:'';
+ const pinLine=isProfile&&a.profile_pin?`\n🔢 *PIN DEL PERFIL:* ${a.profile_pin}`:'';
+ const deviceRule=isProfile?'\n▪️ No usar más de 1 dispositivo al mismo tiempo.':'\n▪️ Utilizar la cuenta únicamente conforme a la modalidad contratada.';
+ return `🎬 *${a.mode==='Perfil'?'PERFIL':'CUENTA COMPLETA'} DE ${String(a.service||'').toUpperCase()}*
+⏳ *DURACIÓN:* ${durationLabel(a)}
+${deviceLine}
+📩 *CORREO:* ${a.login_email||'No registrado'}
+🔒 *CONTRASEÑA:* ${a.login_password||'No registrada'}
+📅 *ENTREGA:* ${formatDateMX(a.start_date)} - *FINALIZA:* ${formatDateMX(a.expiry_date)}${profileLine}${pinLine}
+
+⚠️ *IMPORTANTE*
+▪️ No cambiar la contraseña.${deviceRule}
+▪️ Evitar iniciar y cerrar sesión constantemente.
+▪️ Si se incumplen las indicaciones, el servicio será cancelado sin reembolso.
+
+✅ Gracias por su compra.
+💙 *NexusPreds*`;
+}
 function renewalMessage(a){
-const bankDetails=a.seller==='Kuincy'?`💳 *DATOS PARA TRANSFERENCIA*\nBeneficiario: Gilberto Said Barbosa Moreno\nCLABE: 722969010904340767\nInstitución: Mercado Pago W`:a.seller==='Yael'?`💳 *DATOS PARA TRANSFERENCIA*\nYael Garcia Mendoza - BBVA\nCuenta: 150 472 0638\nCLABE: 012180015047206388`:`⚠️ No tenemos un vendedor asignado a esta cuenta. Contáctanos para confirmar los datos de pago.`;
-return `¡Hola, ${a.customer}! 👋✨\n\nTe escribimos de *NexusPreds* para recordarte que tu suscripción de *${a.service}* ${a.mode==='Perfil'?'(perfil '+(a.profile||'asignado')+')':'('+a.mode.toLowerCase()+')'} está próxima a finalizar el *${a.expiry_date}*.\n\nSi deseas continuar disfrutando del servicio sin interrupciones, podemos ayudarte a realizar tu renovación.\n\n💳 *Renovación:* ${money(a.sale_price)}\n📅 *Vencimiento actual:* ${a.expiry_date}\n\n${bankDetails}\n\nRespóndenos por este medio y con gusto te apoyamos. ¡Gracias por tu preferencia y por confiar en NexusPreds! 💙`;
+ const bankDetails=a.seller==='Kuincy'?`💳 *PAGO DISPONIBLE:*
+Gilberto Said Barbosa Moreno
+Mercado Pago
+CLABE: 722969010904340767`:a.seller==='Yael'?`💳 *PAGO DISPONIBLE:*
+Yael Garcia Mendoza - BBVA
+Cuenta: 150 472 0638
+Cuenta CLABE: 012180015047206388`:`⚠️ No tenemos un vendedor asignado a esta cuenta. Contáctanos para confirmar los datos de pago.`;
+ return `¡Saludos, ${a.customer}! 👋
+
+Tu plan de *${a.service}* está por vencer.
+📅 *Fecha de vencimiento:* ${formatDateMX(a.expiry_date)}
+💰 *Precio de renovación:* ${money(a.sale_price)}
+📩 *Correo:* ${a.login_email||'No registrado'}
+🔐 *Contraseña:* ${a.login_password||'No registrada'}
+
+${bankDetails}
+
+Contáctanos para renovar y no perder tu acceso.
+¡Gracias por tu preferencia! 💙
+*NexusPreds*`;
 }
 async function init(){if(!SUPABASE_URL.startsWith('http')||SUPABASE_ANON_KEY.includes('PEGA_AQUI')){toast('Configura Supabase en el código antes de iniciar sesión.');return}sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const {data:{session}}=await sb.auth.getSession();if(session){user=session.user;showApp()}sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;showApp()}else{user=null;$('app').style.display='none';$('loginView').style.display='grid'}})}
 async function auth(signup){let email=$('authEmail').value.trim(),password=$('authPass').value;if(!email||!password){toast('Escribe tu correo y contraseña.');return}let r=signup?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});if(r.error)toast(r.error.message);else if(signup&&!r.data.session)toast('Revisa tu correo para confirmar el registro.');else toast(signup?'Usuario creado.':'Sesión iniciada.')}
@@ -106,7 +160,7 @@ function go(page){document.querySelectorAll('.section').forEach(x=>x.classList.t
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>go(b.dataset.goto));
 function renderDashboard(){let active=accounts.filter(a=>statusOf(a)==='Activo').length,soon=accounts.filter(a=>statusOf(a)==='Por vencer').length,expired=accounts.filter(a=>statusOf(a)==='Vencido').length,rev=accounts.reduce((n,a)=>n+Number(a.sale_price||0),0),cost=accounts.reduce((n,a)=>n+Number(a.cost_price||0),0);$('stats').innerHTML=[['Cuentas registradas',accounts.length,'Inventario total'],['Clientes activos',active,'Suscripciones vigentes'],['Por vencer',soon,'Próximos 7 días'],['Vencidas',expired,'Requieren seguimiento']].map(x=>`<div class="panel stat"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="hint">${x[2]}</div></div>`).join('');let list=accounts.filter(a=>['Por vencer','Vencido'].includes(statusOf(a))).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date)).slice(0,5);$('dashAlerts').innerHTML=list.length?list.map(a=>`<div class="alertrow"><div><b>${esc(a.service)}</b> · ${esc(a.customer)}<div class="muted">${esc(a.expiry_date)} · ${badge(statusOf(a))}</div></div><button class="small" onclick="sendRenew('${a.id}')">WhatsApp</button></div>`).join(''):'<div class="empty">No hay vencimientos prioritarios.</div>';$('finance').innerHTML=`<div class="grid two"><div><div class="muted">Ventas registradas</div><div class="heading">${money(rev)}</div></div><div><div class="muted">Costo registrado</div><div class="heading">${money(cost)}</div></div></div><div style="margin-top:17px"><div class="muted">Margen bruto estimado</div><div class="heading" style="color:var(--green)">${money(rev-cost)}</div><div class="chartbar"><span style="width:${rev?Math.max(0,Math.min(100,(rev-cost)/rev*100)):0}%"></span></div></div><p class="muted" style="font-size:11px">Cálculo basado en fichas de cuenta; no equivale a utilidad neta contable.</p>`;$('recent').innerHTML=accounts.length?tableHtml(accounts.slice(0,6)):'<div class="empty">Todavía no has registrado cuentas.</div>'}
 function tableHtml(list){return `<div class="tablewrap"><table><thead><tr><th>Servicio</th><th>Cliente</th><th>Modalidad</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.login_email||'')}</div></td><td>${esc(a.customer)}</td><td>${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</td><td>${esc(a.expiry_date)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Abrir</button></td></tr>`).join('')}</tbody></table></div>`}
-function renderAccounts(){let q=$('searchAccounts').value.toLowerCase(),sv=$('filterService').value,st=$('filterStatus').value;let list=accounts.filter(a=>(!q||[a.service,a.customer,a.login_email,a.supplier,a.profile].join(' ').toLowerCase().includes(q))&&(!sv||a.service===sv)&&(!st||statusOf(a)===st));$('accountRows').innerHTML=list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</div></td><td>${esc(a.customer)}<div class="muted">${esc(a.phone)}</div></td><td><span class="seller-badge ${a.seller==='Kuincy'?'kuincy':a.seller==='Yael'?'yael':'unassigned'}">${esc(a.seller||'SIN ASIGNAR')}</span></td><td>${esc(a.owner_type==='Propia'?'Mía':'Proveedor')}${a.owner_type==='Proveedor'&&a.supplier?' · '+esc(a.supplier):''}</td><td>${esc(a.start_date)}</td><td>${esc(a.expiry_date)}</td><td>${money(a.sale_price)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Editar</button> <button class="small" onclick="sendRenew('${a.id}')">WhatsApp</button> <button class="danger small" onclick="deleteAccount('${a.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No se encontraron registros.</td></tr>'}
+function renderAccounts(){let q=$('searchAccounts').value.toLowerCase(),sv=$('filterService').value,st=$('filterStatus').value;let list=accounts.filter(a=>(!q||[a.service,a.customer,a.login_email,a.supplier,a.profile].join(' ').toLowerCase().includes(q))&&(!sv||a.service===sv)&&(!st||statusOf(a)===st));$('accountRows').innerHTML=list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</div></td><td>${esc(a.customer)}<div class="muted">${esc(a.phone)}</div></td><td><span class="seller-badge ${a.seller==='Kuincy'?'kuincy':a.seller==='Yael'?'yael':'unassigned'}">${esc(a.seller||'SIN ASIGNAR')}</span></td><td>${esc(a.owner_type==='Propia'?'Mía':'Proveedor')}${a.owner_type==='Proveedor'&&a.supplier?' · '+esc(a.supplier):''}</td><td>${esc(a.start_date)}</td><td>${esc(a.expiry_date)}</td><td>${money(a.sale_price)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Editar</button> <button class="small" onclick="sendDelivery('${a.id}')">Enviar entrega</button> <button class="small" style="background:#176b57" onclick="sendRenew('${a.id}')">Renovación</button> <button class="danger small" onclick="deleteAccount('${a.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No se encontraron registros.</td></tr>'}
 function fillServiceFilter(){let old=$('filterService').value,vals=[...new Set(accounts.map(a=>a.service))].sort();$('filterService').innerHTML='<option value="">Todos los servicios</option>'+vals.map(x=>`<option>${esc(x)}</option>`).join('');$('filterService').value=old}
 $('searchAccounts').oninput=renderAccounts;$('filterService').onchange=renderAccounts;$('filterStatus').onchange=renderAccounts;
 function renderAlerts(){let list=accounts.filter(a=>['Por vencer','Vencido'].includes(statusOf(a))).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date));$('allAlerts').innerHTML=list.length?list.map(a=>`<div class="alertrow"><div style="min-width:0"><b>${esc(a.service)} · ${esc(a.mode)}</b> ${badge(statusOf(a))}<div class="muted">${esc(a.customer)} · vence ${esc(a.expiry_date)} · ${dateDiff(a.expiry_date)<0?'Venció hace '+Math.abs(dateDiff(a.expiry_date))+' días':'Faltan '+dateDiff(a.expiry_date)+' días'}</div></div><div style="display:flex;gap:7px"><button class="secondary small" onclick="editAccount('${a.id}')">Ficha</button><button class="small" onclick="sendRenew('${a.id}')">Enviar renovación</button></div></div>`).join(''):'<div class="empty">¡Excelente! No tienes cuentas vencidas ni próximas a vencer.</div>'}
@@ -127,7 +181,7 @@ function setPhoneForEdit(phone){let p=String(phone||'').replace(/\D/g,'');let co
 async function editAccount(id){let a=accounts.find(x=>x.id===id);if(!a)return;let map={a_id:'id',a_service:'service',a_mode:'mode',a_profile:'profile',a_profile_pin:'profile_pin',a_owner:'owner_type',a_supplier:'supplier',a_status:'status',a_customer:'customer',a_seller:'seller',a_email:'login_email',a_password:'login_password',a_start:'start_date',a_expiry:'expiry_date',a_cost:'cost_price',a_price:'sale_price',a_warranty:'warranty',a_notes:'notes'};Object.entries(map).forEach(([k,v])=>$(k).value=a[v]??'');setPhoneForEdit(a.phone);let duration=Number(a.duration_months||0);selectedDuration=duration===3?'3m':duration===6?'6m':duration===12?'12m':duration===1?'30d':'custom';$('a_duration').value=String(duration);$('accountModalTitle').textContent='Editar Cuenta de Streaming';syncAccountFields();updateDurationButtons();openModal('accountModal')}
 $('accountForm').onsubmit=async e=>{e.preventDefault();let id=$('a_id').value,mode=$('a_mode').value,owner=$('a_owner').value,phone=$('a_phone').value.replace(/\D/g,'');if(phone.length!==10){toast('El WhatsApp debe contener 10 dígitos.');return}if(!$('a_service').value||!$('a_customer').value.trim()||!$('a_seller').value||!$('a_start').value||!$('a_expiry').value){toast('Completa los campos obligatorios.');return}if(mode==='Perfil'&&!$('a_profile').value.trim()){toast('Escribe el nombre o número del perfil.');return}if(owner==='Proveedor'&&!$('a_supplier').value.trim()){toast('Escribe el nombre del proveedor.');return}let duration=selectedDuration==='30d'?1:selectedDuration==='3m'?3:selectedDuration==='6m'?6:selectedDuration==='12m'?12:0;let a={service:$('a_service').value.trim(),mode,profile:mode==='Perfil'?$('a_profile').value.trim():null,profile_pin:mode==='Perfil'?($('a_profile_pin').value.trim()||null):null,duration_months:duration||null,owner_type:owner,supplier:owner==='Proveedor'?$('a_supplier').value.trim():null,status:$('a_status').value||'Activo',customer:$('a_customer').value.trim(),seller:$('a_seller').value,phone:$('a_phone_country').value+phone,login_email:$('a_email').value.trim(),login_password:$('a_password').value,start_date:$('a_start').value,expiry_date:$('a_expiry').value,cost_price:Number($('a_cost').value||0),sale_price:Number($('a_price').value||0),warranty:$('a_warranty').value,notes:$('a_notes').value};if(a.expiry_date<a.start_date){toast('La fecha de vencimiento no puede ser anterior al inicio.');return}let r=id?await sb.from('np_accounts').update(a).eq('id',id):await sb.from('np_accounts').insert(a);if(r.error){toast(r.error.message);return}if(!id){let created=await sb.from('np_accounts').select('id').eq('customer',a.customer).eq('service',a.service).order('created_at',{ascending:false}).limit(1).maybeSingle();if(created.data)await sb.from('np_movements').insert({movement_type:'Entrada',concept:'Venta inicial · '+a.service,amount:a.sale_price,movement_date:a.start_date,account_id:created.data.id,note:'Generado al registrar la cuenta'})}closeModal('accountModal');toast('Cuenta guardada correctamente.');await loadAll()};
 async function deleteAccount(id){if(!confirm('¿Eliminar esta ficha? El historial de movimientos asociado también podría dejar de mostrarse.'))return;let r=await sb.from('np_accounts').delete().eq('id',id);if(r.error)toast(r.error.message);else{toast('Registro eliminado.');loadAll()}}
-window.editAccount=editAccount;window.deleteAccount=deleteAccount;window.sendRenew=id=>{let a=accounts.find(x=>x.id===id);if(a)wa(a.phone,renewalMessage(a))};
+window.editAccount=editAccount;window.deleteAccount=deleteAccount;window.sendDelivery=id=>{let a=accounts.find(x=>x.id===id);if(a)wa(a.phone,deliveryMessage(a))};window.sendRenew=id=>{let a=accounts.find(x=>x.id===id);if(a)wa(a.phone,renewalMessage(a))};
 $('addMovement').onclick=()=>{$('movementForm').reset();$('m_date').value=today();fillMovementAccounts();openModal('movementModal')};$('movementForm').onsubmit=async e=>{e.preventDefault();let r=await sb.from('np_movements').insert({movement_type:$('m_type').value,movement_date:$('m_date').value,concept:$('m_concept').value,amount:Number($('m_amount').value),account_id:$('m_account').value||null,note:$('m_note').value});if(r.error){toast(r.error.message);return}closeModal('movementModal');toast('Movimiento registrado.');loadAll()};
 $('addSupplier').onclick=()=>{$('supplierForm').reset();openModal('supplierModal')};$('supplierForm').onsubmit=async e=>{e.preventDefault();let r=await sb.from('np_suppliers').insert({name:$('s_name').value,phone:$('s_phone').value,email:$('s_email').value,service:$('s_service').value,notes:$('s_notes').value});if(r.error){toast(r.error.message);return}closeModal('supplierModal');toast('Proveedor guardado.');loadAll()};
 init();
