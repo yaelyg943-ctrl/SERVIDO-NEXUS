@@ -168,11 +168,51 @@ Contáctanos para renovar y no perder tu acceso.
 ¡Gracias por tu preferencia! 💙
 *NexusPreds*`;
 }
-async function init(){if(!SUPABASE_URL.startsWith('http')||SUPABASE_ANON_KEY.includes('PEGA_AQUI')){toast('Configura Supabase en el código antes de iniciar sesión.');return}sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const {data:{session}}=await sb.auth.getSession();if(session){user=session.user;showApp()}sb.auth.onAuthStateChange((_e,s)=>{if(s){user=s.user;showApp()}else{user=null;$('app').style.display='none';$('loginView').style.display='grid'}})}
-async function auth(signup){let email=$('authEmail').value.trim(),password=$('authPass').value;if(!email||!password){toast('Escribe tu correo y contraseña.');return}let r=signup?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});if(r.error)toast(r.error.message);else if(signup&&!r.data.session)toast('Revisa tu correo para confirmar el registro.');else toast(signup?'Usuario creado.':'Sesión iniciada.')}
-$('loginBtn').onclick=()=>auth(false);$('signupBtn').onclick=()=>auth(true);$('logoutBtn').onclick=()=>sb.auth.signOut();
-async function showApp(){$('loginView').style.display='none';$('app').style.display='block';$('userEmail').textContent=user.email||'';$('todayText').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});await loadAll()}
-async function loadAll(){let [a,m,s,o]=await Promise.all([sb.from('np_accounts').select('*').order('expiry_date'),sb.from('np_movements').select('*').order('movement_date',{ascending:false}),sb.from('np_suppliers').select('*').order('name'),sb.from('np_owned_accounts').select('*').order('created_at',{ascending:false})]);if(a.error||m.error||s.error||o.error){toast('Error al cargar datos: '+(a.error||m.error||s.error||o.error).message);return}accounts=a.data||[];movements=m.data||[];suppliers=s.data||[];ownedAccounts=o.data||[];renderAll()}
+let supabaseReady=false;
+function setAuthButtons(ready){supabaseReady=ready;$('loginBtn').disabled=!ready;$('signupBtn').disabled=!ready;$('loginBtn').textContent=ready?'Iniciar sesión':'Conectando…';}
+function loadSupabaseLibrary(){
+ if(window.supabase?.createClient)return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  const urls=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'];let i=0;
+  const next=()=>{if(window.supabase?.createClient)return resolve();if(i>=urls.length)return reject(new Error('No se pudo cargar la librería de Supabase. Revisa tu conexión o bloqueadores del navegador.'));let script=document.createElement('script');script.src=urls[i++];script.onload=()=>window.supabase?.createClient?resolve():next();script.onerror=next;document.head.appendChild(script)};next();
+ });
+}
+function showAuthErrorFromUrl(){
+ const raw=(location.hash||'')+' '+location.search;
+ if(/otp_expired|access_denied/i.test(raw)){
+  toast('El enlace de confirmación del correo venció o ya fue utilizado. Inicia sesión con tu contraseña o solicita un nuevo correo de confirmación.');
+  history.replaceState(null,document.title,location.pathname+location.search.replace(/([?&])error[^&]*/g,'').replace(/[?&]$/,'') );
+ }
+}
+async function init(){
+ setAuthButtons(false);showAuthErrorFromUrl();
+ try{
+  if(!SUPABASE_URL.startsWith('https://')||!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.includes('PEGA_AQUI'))throw new Error('La URL o la clave pública de Supabase no están configuradas.');
+  await loadSupabaseLibrary();
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const {data,error}=await sb.auth.getSession();if(error)throw error;
+  sb.auth.onAuthStateChange((event,session)=>{
+   if(session){user=session.user;$('loginView').style.display='none';showApp().catch(e=>{console.error('Error al abrir NexusPreds:',e);toast('La sesión inició, pero hubo un error al cargar los datos: '+(e.message||e))});}
+   else{user=null;$('app').style.display='none';$('loginView').style.display='grid'}
+  });
+  if(data?.session){user=data.session.user;await showApp();}
+  setAuthButtons(true);
+ }catch(e){console.error('Error al inicializar Supabase:',e);sb=null;setAuthButtons(false);toast('No se pudo conectar con Supabase: '+(e.message||e));}
+}
+async function auth(signup){
+ try{
+  if(!sb||!supabaseReady){toast('La conexión con Supabase todavía no está lista. Recarga la página e inténtalo de nuevo.');return}
+  const email=$('authEmail').value.trim(),password=$('authPass').value;
+  if(!email||!password){toast('Escribe tu correo y contraseña.');return}
+  const r=signup?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
+  if(r.error){toast(r.error.message);return}
+  if(signup&&!r.data.session)toast('Registro creado. Revisa tu correo para confirmar la dirección antes de iniciar sesión.');
+  else toast(signup?'Usuario creado.':'Sesión iniciada.');
+ }catch(e){console.error('Error de autenticación:',e);toast('No se pudo completar el inicio de sesión: '+(e.message||e));}
+}
+$('loginBtn').onclick=()=>auth(false);$('signupBtn').onclick=()=>auth(true);$('logoutBtn').onclick=async()=>{if(sb)await sb.auth.signOut()};
+async function showApp(){if(!sb||!user)return;$('loginView').style.display='none';$('app').style.display='block';$('userEmail').textContent=user.email||'';$('todayText').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});await loadAll()}
+async function loadAll(){if(!sb){toast('No hay conexión con Supabase.');return}let [a,m,s,o]=await Promise.all([sb.from('np_accounts').select('*').order('expiry_date'),sb.from('np_movements').select('*').order('movement_date',{ascending:false}),sb.from('np_suppliers').select('*').order('name'),sb.from('np_owned_accounts').select('*').order('created_at',{ascending:false})]);if(a.error||m.error||s.error||o.error){toast('Error al cargar datos: '+(a.error||m.error||s.error||o.error).message);return}accounts=a.data||[];movements=m.data||[];suppliers=s.data||[];ownedAccounts=o.data||[];renderAll()}
 function renderAll(){renderDashboard();renderAccounts();renderOwnedAccounts();renderExpired();renderAlerts();renderMovements();renderSuppliers();fillMovementAccounts();fillServiceFilter();fillExpiredServiceFilter();fillOwnedAccountSelect()}
 function go(page){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===page));document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$('pageTitle').textContent=({dashboard:'Resumen general',accounts:'Cuentas y ventas',owned:'Mis cuentas propias',expired:'Cuentas vencidas',alerts:'Centro de vencimientos',movements:'Entradas y salidas',suppliers:'Proveedores'})[page]}
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>go(b.dataset.goto));
