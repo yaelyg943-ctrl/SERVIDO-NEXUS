@@ -33,14 +33,23 @@
 .seller-badge.unassigned{background:#3a3030;color:#ffb6b6;border:1px solid #805050}
 #ownedAccountModal .modalbox{width:min(680px,100%)}#ownedAccountModal .modalhead{border-bottom:1px solid var(--line);padding-bottom:12px}#ownedAccountForm{padding-top:14px}#ownedAccountForm .field{min-width:0}#ownedAccountForm label{font-size:11px}#ownedAccountForm input,#ownedAccountForm select,#ownedAccountForm textarea{font-size:12px}
 @media(max-width:560px){#ownedAccountForm .formgrid{grid-template-columns:1fr}#ownedAccountForm .wide{grid-column:1}}
-</style>
+
+.combo-app-card{background:#0b1423;border:1px solid #344158;border-radius:12px;padding:13px}
+.combo-app-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.combo-app-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.combo-app-card label{font-size:10px;color:#b8c3d5;margin-bottom:5px}
+.combo-app-card input,.combo-app-card select{font-size:11px;min-height:34px;padding:7px}
+.combo-app-card .wide{grid-column:1/-1}
+@media(max-width:700px){.combo-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.combo-app-grid{grid-template-columns:1fr}.combo-app-card .wide{grid-column:1}}
+
 </head>
 <body>
 <div id="loginView" class="login"><div class="loginbox"><div class="brand">NEXUS<span>PREDs</span></div><div class="subbrand">CENTRO PRIVADO DE CONTROL</div><h1>Bienvenido</h1><p class="muted">Inicia sesión para administrar tus cuentas y clientes.</p><div class="field"><label>Correo electrónico</label><input id="authEmail" type="email" autocomplete="username" placeholder="tu@correo.com"></div><div class="field"><label>Contraseña</label><input id="authPass" type="password" autocomplete="current-password" placeholder="Tu contraseña"></div><button id="loginBtn" style="width:100%">Iniciar sesión</button><button id="signupBtn" class="secondary" style="width:100%;margin-top:9px">Crear mi usuario</button><p class="muted" style="font-size:11px;margin-top:16px">Primero configura las credenciales de Supabase en el archivo index.html. Consulta INSTRUCCIONES.md.</p></div></div>
 <div id="app" class="app"><aside class="sidebar"><div class="brand">NEXUS<span>PREDs</span></div><div class="subbrand">CONTROL CENTER · V1.0</div><button class="navbtn active" data-page="dashboard"><span class="ico">◫</span> Resumen</button><button class="navbtn" data-page="accounts"><span class="ico">▤</span> Cuentas y ventas</button><button class="navbtn" data-page="owned"><span class="ico">▣</span> Mis cuentas propias</button><button class="navbtn" data-page="expired"><span class="ico">▣</span> Cuentas vencidas</button><button class="navbtn" data-page="alerts"><span class="ico">◷</span> Vencimientos</button><button class="navbtn" data-page="movements"><span class="ico">↕</span> Entradas y salidas</button><button class="navbtn" data-page="payments"><span class="ico">💳</span> Información de pago</button><button class="navbtn" data-page="suppliers"><span class="ico">♙</span> Proveedores</button><div class="sidebottom"><div id="userEmail"></div><button class="secondary small" id="logoutBtn" style="margin-top:10px;width:100%">Cerrar sesión</button></div></aside>
 <main class="main"><div class="top"><div><div class="eyebrow">NEXUSPREDs / ADMINISTRACIÓN</div><div class="heading" id="pageTitle">Resumen general</div><div class="muted" id="todayText"></div></div><button id="quickAdd">＋ Nueva cuenta</button></div>
 <section id="dashboard" class="section active"><div class="grid four" id="stats"></div><div class="grid two" style="margin-top:14px"><div class="panel"><div class="sectionhead"><h2>Alertas prioritarias</h2><button class="secondary small" data-goto="alerts">Ver todas</button></div><div id="dashAlerts"></div></div><div class="panel"><div class="sectionhead"><h2>Resumen financiero</h2><span class="muted">Registros activos</span></div><div id="finance"></div></div></div><div class="panel" style="margin-top:14px"><div class="sectionhead"><h2>Últimas cuentas registradas</h2><button class="secondary small" data-goto="accounts">Ver inventario</button></div><div id="recent"></div></div></section>
-<section id="accounts" class="section"><div class="sectionhead"><h2>Inventario de cuentas y suscripciones</h2><button id="addAccount">＋ Registrar cuenta</button></div><div class="toolbar"><input id="searchAccounts" placeholder="Buscar servicio, cliente, correo..."><select id="filterService"><option value="">Todos los servicios</option></select><select id="filterStatus"><option value="">Todos los estados</option><option>Activo</option><option>Por vencer</option><option>Vencido</option><option>Cancelado</option></select><select id="sortAccounts" aria-label="Ordenar cuentas"><option value="recent">Más recientemente agregadas</option><option value="oldest">Más antiguas agregadas</option><option value="expiryAsc">Caducidad: más próxima</option><option value="expiryDesc">Caducidad: más lejana</option></select></div><div class="tablewrap"><table><thead><tr><th>Servicio / modalidad</th><th>Cliente</th><th>Vendedor</th><th>Propiedad</th><th>Inicio</th><th>Vencimiento</th><th>Venta</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="accountRows"></tbody></table></div></section>
+<section id="accounts" class="section"><div class="sectionhead"><h2>Inventario de cuentas y suscripciones</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="addAccount">＋ Registrar cuenta</button><button id="addCombo" class="secondary">✦ Crear combo</button></div></div><div class="toolbar"><input id="searchAccounts" placeholder="Buscar servicio, cliente, correo..."><select id="filterService"><option value="">Todos los servicios</option></select><select id="filterStatus"><option value="">Todos los estados</option><option>Activo</option><option>Por vencer</option><option>Vencido</option><option>Cancelado</option></select><select id="sortAccounts" aria-label="Ordenar cuentas"><option value="recent">Más recientemente agregadas</option><option value="oldest">Más antiguas agregadas</option><option value="expiryAsc">Caducidad: más próxima</option><option value="expiryDesc">Caducidad: más lejana</option></select></div><div class="tablewrap"><table><thead><tr><th>Servicio / modalidad</th><th>Cliente</th><th>Vendedor</th><th>Propiedad</th><th>Inicio</th><th>Vencimiento</th><th>Venta</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="accountRows"></tbody></table></div></section>
 <section id="owned" class="section">
  <div class="sectionhead"><div><h2>Inventario de mis cuentas propias</h2><div class="muted" style="font-size:12px;margin-top:5px">Administra tus cuentas maestras y controla los perfiles disponibles.</div></div><button id="addOwnedAccount">＋ Agregar cuenta propia</button></div>
  <div class="grid four" id="ownedStats" style="margin-bottom:14px"></div>
@@ -120,12 +129,35 @@
 </div><div class="actions"><button type="button" class="secondary" data-close="ownedAccountModal">Cancelar</button><button type="submit">Guardar cuenta propia</button></div></form></div></div>
 <div class="modal" id="movementModal"><div class="modalbox" style="max-width:600px"><div class="modalhead"><h2>Registrar movimiento</h2><button class="secondary small" data-close="movementModal">Cerrar ✕</button></div><form id="movementForm"><div class="grid two"><div class="field"><label>Tipo *</label><select id="m_type"><option value="Entrada">Entrada / ingreso</option><option value="Salida">Salida / egreso</option></select></div><div class="field"><label>Fecha *</label><input id="m_date" type="date" required></div><div class="field"><label>Concepto *</label><input id="m_concept" required placeholder="Ej. Venta Spotify / Pago proveedor"></div><div class="field"><label>Monto ($ MXN) *</label><input id="m_amount" type="number" min="0.01" step=".01" required></div><div class="field" style="grid-column:span 2"><label>Cuenta relacionada (opcional)</label><select id="m_account"><option value="">Sin cuenta asociada</option></select></div><div class="field" style="grid-column:span 2"><label>Nota</label><textarea id="m_note" rows="2"></textarea></div></div><div class="actions"><button type="button" class="secondary" data-close="movementModal">Cancelar</button><button>Guardar movimiento</button></div></form></div></div>
 <div class="modal" id="supplierModal"><div class="modalbox" style="max-width:540px"><div class="modalhead"><h2>Nuevo proveedor</h2><button class="secondary small" data-close="supplierModal">Cerrar ✕</button></div><form id="supplierForm"><div class="grid two"><div class="field"><label>Nombre *</label><input id="s_name" required></div><div class="field"><label>WhatsApp</label><input id="s_phone"></div><div class="field"><label>Correo</label><input id="s_email" type="email"></div><div class="field"><label>Servicio principal</label><input id="s_service"></div><div class="field" style="grid-column:span 2"><label>Notas</label><textarea id="s_notes" rows="2"></textarea></div></div><div class="actions"><button type="button" class="secondary" data-close="supplierModal">Cancelar</button><button>Guardar proveedor</button></div></form></div></div>
+<div class="modal" id="comboModal"><div class="modalbox" style="width:min(980px,100%)">
+ <div class="modalhead"><div><h2>Crear combo de servicios</h2><div class="muted" style="font-size:11px">Un cliente, un WhatsApp y un solo precio total. Cada aplicación conserva sus propios accesos y vencimiento.</div></div><button class="secondary small" data-close="comboModal">Cerrar ✕</button></div>
+ <form id="comboForm">
+  <div class="grid three">
+   <div class="field"><label>Nombre del combo *</label><input id="c_name" required placeholder="Ej. COMBO DE OSCAR"></div>
+   <div class="field"><label>Vendedor responsable *</label><select id="c_seller" required><option value="">Seleccionar</option><option value="Kuincy">Kuincy</option><option value="Yael">Yael</option></select></div>
+   <div class="field"><label>Fecha de venta *</label><input id="c_start" type="date" required></div>
+   <div class="field"><label>Nombre del cliente *</label><input id="c_customer" required placeholder="Nombre del cliente"></div>
+   <div class="field"><label>Lada país</label><select id="c_country"><option value="52">🇲🇽 +52 (MX)</option><option value="1">🇺🇸 +1 (US)</option><option value="34">🇪🇸 +34 (ES)</option><option value="57">🇨🇴 +57 (CO)</option><option value="54">🇦🇷 +54 (AR)</option><option value="56">🇨🇱 +56 (CL)</option><option value="51">🇵🇪 +51 (PE)</option></select></div>
+   <div class="field"><label>WhatsApp (10 dígitos) *</label><input id="c_phone" maxlength="10" inputmode="numeric" required placeholder="9531234567"></div>
+   <div class="field"><label>Precio total del combo (MXN) *</label><input id="c_total" type="number" min="0.01" step=".01" required placeholder="150.00"></div>
+   <div class="field" style="grid-column:span 2"><label>Notas del combo (opcional)</label><input id="c_notes" placeholder="Promoción, condiciones, observaciones..."></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:20px 0 10px"><div><b>Aplicaciones incluidas</b><div class="muted" style="font-size:11px">Agrega una ficha por cada servicio del paquete.</div></div><button type="button" class="secondary small" id="addComboApp">＋ Agregar aplicación</button></div>
+  <div id="comboApps" class="grid" style="gap:12px"></div>
+  <div class="notice" style="margin-top:14px">El precio total se registra una sola vez como ingreso. El costo se registra por cada aplicación para calcular el margen sin duplicar la venta.</div>
+  <div class="actions"><button type="button" class="secondary" data-close="comboModal">Cancelar</button><button type="submit">✓ Guardar combo y registrar venta</button></div>
+ </form>
+</div></div>
+<div class="modal" id="comboViewModal"><div class="modalbox" style="width:min(760px,100%)">
+ <div class="modalhead"><div><h2 id="comboViewTitle">Detalle del combo</h2><div id="comboViewSub" class="muted" style="font-size:11px"></div></div><button class="secondary small" data-close="comboViewModal">Cerrar ✕</button></div>
+ <div id="comboViewBody"></div><div class="actions"><button class="secondary" id="comboViewSend">Enviar por WhatsApp</button><button class="danger" id="comboViewDelete">Eliminar combo</button></div>
+</div></div>
 <div id="toast" class="toast"></div>
 <script>
 // Configuración original de Supabase: se conserva sin cambios.
 const SUPABASE_URL = "https://ubjnailuxzxfdichiveu.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_2dYy7nmRtFcdH-Tny-EQWQ_USaZG2zO";
-let sb=null,user=null,accounts=[],movements=[],suppliers=[],ownedAccounts=[];
+let sb=null,user=null,accounts=[],movements=[],suppliers=[],ownedAccounts=[],combos=[];
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n||0));
 const today=()=>{let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -245,15 +277,145 @@ async function auth(signup){
 }
 $('loginBtn').onclick=()=>auth(false);$('signupBtn').onclick=()=>auth(true);$('logoutBtn').onclick=async()=>{if(sb)await sb.auth.signOut()};
 async function showApp(){if(!sb||!user)return;$('loginView').style.display='none';$('app').style.display='block';$('userEmail').textContent=user.email||'';$('todayText').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});await loadAll()}
-async function loadAll(){if(!sb){toast('No hay conexión con Supabase.');return}let [a,m,s,o]=await Promise.all([sb.from('np_accounts').select('*').order('expiry_date'),sb.from('np_movements').select('*').order('movement_date',{ascending:false}),sb.from('np_suppliers').select('*').order('name'),sb.from('np_owned_accounts').select('*').order('created_at',{ascending:false})]);if(a.error||m.error||s.error||o.error){toast('Error al cargar datos: '+(a.error||m.error||s.error||o.error).message);return}accounts=a.data||[];movements=m.data||[];suppliers=s.data||[];ownedAccounts=o.data||[];renderAll()}
+async function loadAll(){if(!sb){toast('No hay conexión con Supabase.');return}let [a,m,s,o,c]=await Promise.all([sb.from('np_accounts').select('*').order('expiry_date'),sb.from('np_movements').select('*').order('movement_date',{ascending:false}),sb.from('np_suppliers').select('*').order('name'),sb.from('np_owned_accounts').select('*').order('created_at',{ascending:false}),sb.from('np_combos').select('*').order('created_at',{ascending:false})]);if(a.error||m.error||s.error||o.error||c.error){toast('Error al cargar datos: '+(a.error||m.error||s.error||o.error||c.error).message);return}accounts=a.data||[];movements=m.data||[];suppliers=s.data||[];ownedAccounts=o.data||[];combos=c.data||[];renderAll()}
 function renderAll(){renderDashboard();renderAccounts();renderOwnedAccounts();renderExpired();renderAlerts();renderMovements();renderSuppliers();fillMovementAccounts();fillServiceFilter();fillExpiredServiceFilter();fillOwnedAccountSelect()}
 function go(page){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===page));document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$('pageTitle').textContent=({dashboard:'Resumen general',accounts:'Cuentas y ventas',owned:'Mis cuentas propias',expired:'Cuentas vencidas',alerts:'Centro de vencimientos',movements:'Entradas y salidas',suppliers:'Proveedores',payments:'Información de pago'})[page]}
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>go(b.dataset.goto));
-function renderDashboard(){let active=accounts.filter(a=>statusOf(a)==='Activo').length,soon=accounts.filter(a=>statusOf(a)==='Por vencer').length,expired=accounts.filter(a=>statusOf(a)==='Vencido').length,visible=accounts.filter(a=>statusOf(a)!=='Vencido'),rev=accounts.reduce((n,a)=>n+Number(a.sale_price||0),0),cost=accounts.reduce((n,a)=>n+Number(a.cost_price||0),0);$('stats').innerHTML=[['Cuentas en inventario',visible.length,'Vigentes y próximas a vencer'],['Clientes activos',active,'Suscripciones vigentes'],['Por vencer',soon,'Próximos 7 días'],['Vencidas',expired,'Requieren seguimiento']].map(x=>`<div class="panel stat"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="hint">${x[2]}</div></div>`).join('');let list=accounts.filter(a=>statusOf(a)==='Por vencer').sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date)).slice(0,5);$('dashAlerts').innerHTML=list.length?list.map(a=>`<div class="alertrow"><div><b>${esc(a.service)}</b> · ${esc(a.customer)}<div class="muted">${esc(a.expiry_date)} · ${badge(statusOf(a))}</div></div><button class="small" onclick="sendRenew('${a.id}')">WhatsApp</button></div>`).join(''):'<div class="empty">No hay vencimientos prioritarios.</div>';$('finance').innerHTML=`<div class="grid two"><div><div class="muted">Ventas registradas</div><div class="heading">${money(rev)}</div></div><div><div class="muted">Costo registrado</div><div class="heading">${money(cost)}</div></div></div><div style="margin-top:17px"><div class="muted">Margen bruto estimado</div><div class="heading" style="color:var(--green)">${money(rev-cost)}</div><div class="chartbar"><span style="width:${rev?Math.max(0,Math.min(100,(rev-cost)/rev*100)):0}%"></span></div></div><p class="muted" style="font-size:11px">Cálculo basado en fichas de cuenta; no equivale a utilidad neta contable.</p>`;$('recent').innerHTML=visible.length?tableHtml(visible.slice(0,6)):'<div class="empty">No hay cuentas vigentes registradas.</div>'}
+function renderDashboard(){let active=accounts.filter(a=>statusOf(a)==='Activo').length,soon=accounts.filter(a=>statusOf(a)==='Por vencer').length,expired=accounts.filter(a=>statusOf(a)==='Vencido').length,visible=accounts.filter(a=>statusOf(a)!=='Vencido'),rev=accounts.reduce((n,a)=>n+Number(a.sale_price||0),0)+combos.reduce((n,c)=>n+Number(c.total_price||0),0),cost=accounts.reduce((n,a)=>n+Number(a.cost_price||0),0);$('stats').innerHTML=[['Cuentas en inventario',visible.length,'Vigentes y próximas a vencer'],['Clientes activos',active,'Suscripciones vigentes'],['Por vencer',soon,'Próximos 7 días'],['Vencidas',expired,'Requieren seguimiento']].map(x=>`<div class="panel stat"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="hint">${x[2]}</div></div>`).join('');let list=accounts.filter(a=>statusOf(a)==='Por vencer').sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date)).slice(0,5);$('dashAlerts').innerHTML=list.length?list.map(a=>`<div class="alertrow"><div><b>${esc(a.service)}</b> · ${esc(a.customer)}<div class="muted">${esc(a.expiry_date)} · ${badge(statusOf(a))}</div></div><button class="small" onclick="sendRenew('${a.id}')">WhatsApp</button></div>`).join(''):'<div class="empty">No hay vencimientos prioritarios.</div>';$('finance').innerHTML=`<div class="grid two"><div><div class="muted">Ventas registradas</div><div class="heading">${money(rev)}</div></div><div><div class="muted">Costo registrado</div><div class="heading">${money(cost)}</div></div></div><div style="margin-top:17px"><div class="muted">Margen bruto estimado</div><div class="heading" style="color:var(--green)">${money(rev-cost)}</div><div class="chartbar"><span style="width:${rev?Math.max(0,Math.min(100,(rev-cost)/rev*100)):0}%"></span></div></div><p class="muted" style="font-size:11px">Cálculo basado en fichas de cuenta; no equivale a utilidad neta contable.</p>`;$('recent').innerHTML=visible.length?tableHtml(visible.slice(0,6)):'<div class="empty">No hay cuentas vigentes registradas.</div>'}
 function tableHtml(list){return `<div class="tablewrap"><table><thead><tr><th>Servicio</th><th>Cliente</th><th>Modalidad</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead><tbody>${list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.login_email||'')}</div></td><td>${esc(a.customer)}</td><td>${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</td><td>${esc(a.expiry_date)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Abrir</button></td></tr>`).join('')}</tbody></table></div>`}
-function renderAccounts(){let q=$('searchAccounts').value.toLowerCase(),sv=$('filterService').value,st=$('filterStatus').value,sort=$('sortAccounts').value;let list=accounts.filter(a=>statusOf(a)!=='Vencido'&&(!q||[a.service,a.customer,a.login_email,a.supplier,a.profile].join(' ').toLowerCase().includes(q))&&(!sv||a.service===sv)&&(!st||statusOf(a)===st));list.sort((a,b)=>{if(sort==='recent'||sort==='oldest'){let av=a.created_at||a.start_date||'',bv=b.created_at||b.start_date||'';return sort==='recent'?String(bv).localeCompare(String(av)):String(av).localeCompare(String(bv))}let av=a.expiry_date||'',bv=b.expiry_date||'';return sort==='expiryDesc'?String(bv).localeCompare(String(av)):String(av).localeCompare(String(bv))});$('accountRows').innerHTML=list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</div></td><td>${esc(a.customer)}<div class="muted">${esc(a.phone)}</div></td><td><span class="seller-badge ${a.seller==='Kuincy'?'kuincy':a.seller==='Yael'?'yael':'unassigned'}">${esc(a.seller||'SIN ASIGNAR')}</span></td><td>${esc(a.owner_type==='Propia'?'Mía':'Proveedor')}${a.owner_type==='Proveedor'&&a.supplier?' · '+esc(a.supplier):''}</td><td>${esc(a.start_date)}</td><td>${esc(a.expiry_date)}</td><td>${money(a.sale_price)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Editar</button> <button class="small" onclick="sendDelivery('${a.id}')">Enviar entrega</button> <button class="small" style="background:#176b57" onclick="sendRenew('${a.id}')">Renovación</button> <button class="danger small" onclick="deleteAccount('${a.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No se encontraron registros.</td></tr>'}
+function renderAccounts(){let q=$('searchAccounts').value.toLowerCase(),sv=$('filterService').value,st=$('filterStatus').value,sort=$('sortAccounts').value;let list=accounts.filter(a=>!a.combo_id&&statusOf(a)!=='Vencido'&&(!q||[a.service,a.customer,a.login_email,a.supplier,a.profile].join(' ').toLowerCase().includes(q))&&(!sv||a.service===sv)&&(!st||statusOf(a)===st));list.sort((a,b)=>{if(sort==='recent'||sort==='oldest'){let av=a.created_at||a.start_date||'',bv=b.created_at||b.start_date||'';return sort==='recent'?String(bv).localeCompare(String(av)):String(av).localeCompare(String(bv))}let av=a.expiry_date||'',bv=b.expiry_date||'';return sort==='expiryDesc'?String(bv).localeCompare(String(av)):String(av).localeCompare(String(bv))});$('accountRows').innerHTML=list.map(a=>`<tr><td><b>${esc(a.service)}</b><div class="muted">${esc(a.mode)} ${a.mode==='Perfil'&&a.profile?'· '+esc(a.profile):''}</div></td><td>${esc(a.customer)}<div class="muted">${esc(a.phone)}</div></td><td><span class="seller-badge ${a.seller==='Kuincy'?'kuincy':a.seller==='Yael'?'yael':'unassigned'}">${esc(a.seller||'SIN ASIGNAR')}</span></td><td>${esc(a.owner_type==='Propia'?'Mía':'Proveedor')}${a.owner_type==='Proveedor'&&a.supplier?' · '+esc(a.supplier):''}</td><td>${esc(a.start_date)}</td><td>${esc(a.expiry_date)}</td><td>${money(a.sale_price)}</td><td>${badge(statusOf(a))}</td><td><button class="secondary small" onclick="editAccount('${a.id}')">Editar</button> <button class="small" onclick="sendDelivery('${a.id}')">Enviar entrega</button> <button class="small" style="background:#176b57" onclick="sendRenew('${a.id}')">Renovación</button> <button class="danger small" onclick="deleteAccount('${a.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No se encontraron registros.</td></tr>'}
 function fillServiceFilter(){let old=$('filterService').value,vals=[...new Set(accounts.map(a=>a.service))].sort();$('filterService').innerHTML='<option value="">Todos los servicios</option>'+vals.map(x=>`<option>${esc(x)}</option>`).join('');$('filterService').value=old}
 $('searchAccounts').oninput=renderAccounts;$('filterService').onchange=renderAccounts;$('filterStatus').onchange=renderAccounts;$('sortAccounts').onchange=renderAccounts;
+
+// ===== MÓDULO DE COMBOS =====
+const comboServices=['Netflix','Disney+','Spotify','YouTube Premium','YouTube Music','Apple TV+','Apple Music','Paramount+','Prime Video','HBO Max','Crunchyroll','ViX Premium','Canva','Gemini','Otro'];
+let comboAppCounter=0,activeComboView=null;
+function comboServiceOptions(){return '<option value="">Selecciona plataforma</option>'+comboServices.map(x=>`<option>${esc(x)}</option>`).join('')}
+function addComboAppRow(){
+ const n=++comboAppCounter,box=document.createElement('div');box.className='combo-app-card';box.dataset.comboApp='1';
+ const start=today(),expiry=addDays(start,30);
+ box.innerHTML=`<div class="combo-app-head"><b>Aplicación #${n}</b><button type="button" class="danger small combo-remove">Quitar</button></div>
+ <div class="combo-app-grid">
+  <div class="field"><label>Plataforma *</label><select data-f="service" required>${comboServiceOptions()}</select></div>
+  <div class="field"><label>Modalidad *</label><select data-f="mode"><option value="Perfil">Perfil / pantalla individual</option><option value="Cuenta completa">Cuenta completa</option></select></div>
+  <div class="field"><label>Propiedad *</label><select data-f="owner"><option value="Proveedor">Proveedor</option><option value="Propia">Cuenta propia</option></select></div>
+  <div class="field" data-wrap="supplier"><label>Proveedor *</label><input data-f="supplier" placeholder="Nombre del proveedor"></div>
+  <div class="field" data-wrap="owned" style="display:none"><label>Cuenta propia *</label><select data-f="owned"><option value="">Selecciona cuenta propia</option></select></div>
+  <div class="field"><label>Correo / usuario *</label><input data-f="email" required placeholder="correo@dominio.com"></div>
+  <div class="field"><label>Contraseña *</label><input data-f="password" required></div>
+  <div class="field"><label>Perfil / usuario asignado</label><input data-f="profile" placeholder="Ej. Perfil 2 - María"></div>
+  <div class="field"><label>PIN (opcional)</label><input data-f="pin" maxlength="12"></div>
+  <div class="field"><label>Inicio *</label><input data-f="start" type="date" value="${start}" required></div>
+  <div class="field"><label>Vencimiento *</label><input data-f="expiry" type="date" value="${expiry}" required></div>
+  <div class="field"><label>Costo de esta aplicación</label><input data-f="cost" type="number" min="0" step=".01" value="0"></div>
+ </div>`;
+ $('comboApps').appendChild(box);
+ const service=box.querySelector('[data-f="service"]'),owner=box.querySelector('[data-f="owner"]'),owned=box.querySelector('[data-f="owned"]');
+ const refresh=()=>{let own=owner.value==='Propia';box.querySelector('[data-wrap="supplier"]').style.display=own?'none':'block';box.querySelector('[data-wrap="owned"]').style.display=own?'block':'none';box.querySelector('[data-f="supplier"]').required=!own;owned.required=own;fillComboOwnedSelect(box)};
+ service.addEventListener('change',refresh);owner.addEventListener('change',refresh);
+ owned.addEventListener('change',()=>{const o=ownedAccounts.find(x=>x.id===owned.value);if(o){box.querySelector('[data-f="email"]').value=o.login_email||'';box.querySelector('[data-f="password"]').value=o.login_password||'';box.querySelector('[data-f="mode"]').value=o.product_type==='Cuenta completa'?'Cuenta completa':'Perfil';if(o.expiry_date&&box.querySelector('[data-f="expiry"]').value>o.expiry_date)box.querySelector('[data-f="expiry"]').value=o.expiry_date}});
+ box.querySelector('.combo-remove').onclick=()=>{if($('comboApps').children.length<=1){toast('El combo debe incluir al menos una aplicación.');return}box.remove()};
+ refresh();
+}
+function fillComboOwnedSelect(card){const service=card.querySelector('[data-f="service"]').value,el=card.querySelector('[data-f="owned"]'),old=el.value;let valid=ownedAccounts.filter(o=>o.service===service&&ownedStatus(o)!=='Vencida'&&(ownedUsed(o)<Number(o.user_capacity||1)||o.id===old));el.innerHTML='<option value="">Selecciona cuenta propia</option>'+valid.map(o=>`<option value="${esc(o.id)}">${esc(o.login_email)} · ${Math.max(0,Number(o.user_capacity||1)-ownedUsed(o))} disponibles</option>`).join('');if(valid.some(o=>o.id===old))el.value=old}
+function resetComboForm(){ $('comboForm').reset();$('c_start').value=today();$('c_country').value='52';$('comboApps').innerHTML='';comboAppCounter=0;addComboAppRow(); }
+function comboChildren(comboId){return accounts.filter(a=>a.combo_id===comboId)}
+function comboStatusLabel(children){let live=children.filter(a=>statusOf(a)!=='Vencido'&&statusOf(a)!=='Cancelado').length;return `${live}/${children.length} aplicaciones activas`}
+function renderComboRows(){
+ const q=$('searchAccounts').value.toLowerCase(),sv=$('filterService').value,st=$('filterStatus').value;
+ const rows=combos.map(c=>({c,apps:comboChildren(c.id)})).filter(({c,apps})=>{
+  const visible=apps.some(a=>statusOf(a)!=='Vencido');
+  const matchesText=!q||[c.combo_name,c.customer,c.phone,...apps.map(a=>a.service)].join(' ').toLowerCase().includes(q);
+  const matchesService=!sv||apps.some(a=>a.service===sv);
+  const statuses=apps.map(statusOf);
+  const matchesStatus=!st||statuses.includes(st);
+  return apps.length&&visible&&matchesText&&matchesService&&matchesStatus;
+ }).map(({c,apps})=>{
+  const first=apps[0],live=apps.filter(a=>statusOf(a)!=='Vencido').length;
+  const serviceList=apps.map(a=>a.service).join(' · ');
+  return `<tr style="background:#111d31"><td><b>✦ ${esc(c.combo_name)}</b><div class="muted">${esc(serviceList)}</div></td><td>${esc(c.customer)}<div class="muted">${esc(c.phone)}</div></td><td><span class="seller-badge ${c.seller==='Kuincy'?'kuincy':c.seller==='Yael'?'yael':'unassigned'}">${esc(c.seller||'SIN ASIGNAR')}</span></td><td>Combo</td><td>${esc(c.start_date||'')}</td><td>${apps.length} aplicaciones</td><td><b>${money(c.total_price)}</b></td><td><span class="pill ${live===apps.length?'ok':'warn'}">${live}/${apps.length} activas</span></td><td><button class="secondary small" onclick="viewCombo('${c.id}')">Ver combo</button> <button class="small" onclick="sendComboDelivery('${c.id}')">WhatsApp</button> <button class="danger small" onclick="deleteCombo('${c.id}')">×</button></td></tr>`;
+ }).join('');
+ if(rows)$('accountRows').insertAdjacentHTML('afterbegin',rows);
+}
+const renderAccountsBase=renderAccounts;
+renderAccounts=function(){renderAccountsBase();renderComboRows()};
+function comboDeliveryMessage(c){
+ const apps=comboChildren(c.id);
+ const sections=apps.map((a,i)=>`${i+1}. *${String(a.service).toUpperCase()}* (${a.mode})
+📩 Correo: ${a.login_email||'No registrado'}
+🔒 Contraseña: ${a.login_password||'No registrada'}${a.profile?'\n👤 Perfil: '+a.profile:''}${a.profile_pin?'\n🔢 PIN: '+a.profile_pin:''}
+📅 Vigencia: ${formatDateMX(a.start_date)} al ${formatDateMX(a.expiry_date)}`).join('\n\n');
+ return `¡Hola ${c.customer}! 👋\nTe compartimos los datos de tu *${c.combo_name}* de NEXUSPREDs.\n\n${sections}\n\n💰 *Total del combo:* ${money(c.total_price)}\nGracias por tu compra. 💙`;
+}
+function viewCombo(id){
+ const c=combos.find(x=>x.id===id);if(!c)return;activeComboView=id;const apps=comboChildren(id);
+ $('comboViewTitle').textContent=c.combo_name;$('comboViewSub').textContent=`${c.customer} · ${c.phone} · ${c.seller} · ${money(c.total_price)}`;
+ $('comboViewBody').innerHTML=apps.map((a,i)=>`<div class="panel" style="margin:10px 0"><b>${i+1}. ${esc(a.service)} · ${esc(a.mode)}</b><div class="muted" style="margin:6px 0">Vence: ${formatDateMX(a.expiry_date)} · ${esc(statusOf(a))}</div><div>Correo: <b>${esc(a.login_email||'—')}</b></div><div>Contraseña: <b>${esc(a.login_password||'—')}</b></div>${a.profile?`<div>Perfil: ${esc(a.profile)}</div>`:''}${a.profile_pin?`<div>PIN: ${esc(a.profile_pin)}</div>`:''}<div class="muted">Propiedad: ${esc(a.owner_type)}${a.supplier?' · '+esc(a.supplier):''}</div></div>`).join('')||'<div class="empty">No se encontraron aplicaciones.</div>';
+ $('comboViewSend').onclick=()=>sendComboDelivery(id);$('comboViewDelete').onclick=()=>deleteCombo(id);openModal('comboViewModal');
+}
+window.viewCombo=viewCombo;
+window.sendComboDelivery=id=>{const c=combos.find(x=>x.id===id);if(c)wa(c.phone,comboDeliveryMessage(c))};
+window.deleteCombo=async id=>{
+ const c=combos.find(x=>x.id===id);if(!c||!confirm(`¿Eliminar el combo "${c.combo_name}" y todas sus aplicaciones? Esta acción no se puede deshacer.`))return;
+ let r=await sb.from('np_movements').delete().eq('combo_id',id);if(r.error){toast('No se pudo eliminar el movimiento: '+r.error.message);return}
+ r=await sb.from('np_accounts').delete().eq('combo_id',id);if(r.error){toast('No se pudieron eliminar las aplicaciones: '+r.error.message);return}
+ r=await sb.from('np_combos').delete().eq('id',id);if(r.error){toast('No se pudo eliminar el combo: '+r.error.message);return}
+ closeModal('comboViewModal');toast('Combo eliminado.');await loadAll();
+};
+$('addCombo').onclick=()=>{resetComboForm();openModal('comboModal')};
+$('addComboApp').onclick=addComboAppRow;
+$('comboForm').onsubmit=async e=>{
+ e.preventDefault();
+ const phone=$('c_phone').value.replace(/\D/g,'');
+ if(phone.length!==10){toast('El WhatsApp debe contener 10 dígitos.');return}
+ const cards=[...$('comboApps').querySelectorAll('[data-combo-app]')];
+ if(!cards.length){toast('Agrega al menos una aplicación.');return}
+ const comboName=$('c_name').value.trim(),customer=$('c_customer').value.trim(),seller=$('c_seller').value,start=$('c_start').value,total=Number($('c_total').value);
+ if(!comboName||!customer||!seller||!start||!Number.isFinite(total)||total<=0){toast('Completa los datos generales del combo.');return}
+ const childRows=[];
+ for(let i=0;i<cards.length;i++){
+  const card=cards[i],get=k=>card.querySelector(`[data-f="${k}"]`).value.trim();
+  const service=get('service'),mode=get('mode'),owner=get('owner'),expiry=get('expiry'),appStart=get('start');
+  if(!service||!expiry||!appStart||expiry<appStart){toast(`Revisa plataforma y fechas de la aplicación #${i+1}.`);return}
+  let own=null,supplier=null,profile=get('profile')||null;
+  if(owner==='Propia'){
+   own=ownedAccounts.find(o=>o.id===get('owned'));
+   if(!own||own.service!==service){toast(`Selecciona una cuenta propia válida para ${service}.`);return}
+   if(own.expiry_date<expiry){toast(`La vigencia de ${service} no puede superar la cuenta propia.`);return}
+   if(mode==='Perfil'&&!profile){toast(`Escribe el perfil que se asignará en ${service}.`);return}
+   if(mode==='Perfil'){
+    const slot=ownedProfileSlot(profile).toLowerCase();
+    const already=ownedAllocations(own).some(a=>ownedProfileSlot(a.profile).toLowerCase()===slot);
+    const sameCombo=childRows.some(a=>a.owned_account_id===own.id&&ownedProfileSlot(a.profile).toLowerCase()===slot);
+    if(already||sameCombo){toast(`El espacio "${profile}" de ${service} ya está ocupado.`);return}
+   }else if(ownedUsed(own)>=Number(own.user_capacity||1)){toast(`La cuenta propia de ${service} ya no tiene espacios disponibles.`);return}
+  }else{
+   supplier=get('supplier');
+   if(!supplier){toast(`Escribe el proveedor de ${service}.`);return}
+  }
+  const email=own?.login_email||get('email'),password=own?.login_password||get('password');
+  if(!email||!password){toast(`Completa correo y contraseña de ${service}.`);return}
+  const duration=0;
+  childRows.push({service,mode,profile,profile_pin:get('pin')||null,duration_months:null,owner_type:owner,owned_account_id:own?.id||null,supplier:owner==='Proveedor'?supplier:(own?.supplier||null),status:'Activo',customer,seller,phone:$('c_country').value+phone,login_email:email,login_password:password,start_date:appStart,expiry_date:expiry,cost_price:Number(get('cost')||0),sale_price:0,warranty:'',notes:`Incluido en ${comboName}`});
+ }
+ const parent={combo_name:comboName,customer,phone:$('c_country').value+phone,seller,total_price:total,start_date:start,notes:$('c_notes').value.trim()};
+ const created=await sb.from('np_combos').insert(parent).select('*').single();
+ if(created.error){toast('No se pudo crear el combo: '+created.error.message);return}
+ const comboId=created.data.id;
+ const rows=childRows.map(a=>({...a,combo_id:comboId}));
+ const saved=await sb.from('np_accounts').insert(rows);
+ if(saved.error){await sb.from('np_combos').delete().eq('id',comboId);toast('No se guardaron las aplicaciones: '+saved.error.message);return}
+ const movement=await sb.from('np_movements').insert({movement_type:'Entrada',concept:'Venta de combo · '+comboName,amount:total,movement_date:start,account_id:null,combo_id:comboId,note:'Ingreso único generado al registrar el combo'});
+ if(movement.error){await sb.from('np_accounts').delete().eq('combo_id',comboId);await sb.from('np_combos').delete().eq('id',comboId);toast('No se registró el ingreso; se revirtió el combo: '+movement.error.message);return}
+ closeModal('comboModal');toast('Combo registrado correctamente.');await loadAll();
+};
+const renderMovementsBase=renderMovements;
+renderMovements=function(){
+ const ins=movements.filter(m=>m.movement_type==='Entrada').reduce((n,m)=>n+Number(m.amount),0),outs=movements.filter(m=>m.movement_type==='Salida').reduce((n,m)=>n+Number(m.amount),0);
+ $('movementTotals').innerHTML=[['Entradas',ins],['Salidas',outs],['Balance',ins-outs]].map(x=>`<div class="panel stat"><div class="k">${x[0]}</div><div class="v">${money(x[1])}</div></div>`).join('');
+ $('movementRows').innerHTML=movements.map(m=>{let a=accounts.find(x=>x.id===m.account_id),c=combos.find(x=>x.id===m.combo_id);return `<tr><td>${esc(m.movement_date)}</td><td>${esc(m.movement_type)}</td><td>${esc(m.concept)}</td><td>${c?'✦ '+esc(c.combo_name):a?esc(a.service+' · '+a.customer):'—'}</td><td style="color:${m.movement_type==='Entrada'?'var(--green)':'var(--red)'}">${m.movement_type==='Entrada'?'+':'−'}${money(m.amount)}</td><td>${esc(m.note||'')}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No hay movimientos registrados.</td></tr>';
+};
+
 function renderAlerts(){let list=accounts.filter(a=>['Por vencer','Vencido'].includes(statusOf(a))).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date));$('allAlerts').innerHTML=list.length?list.map(a=>`<div class="alertrow"><div style="min-width:0"><b>${esc(a.service)} · ${esc(a.mode)}</b> ${badge(statusOf(a))}<div class="muted">${esc(a.customer)} · vence ${esc(a.expiry_date)} · ${dateDiff(a.expiry_date)<0?'Venció hace '+Math.abs(dateDiff(a.expiry_date))+' días':'Faltan '+dateDiff(a.expiry_date)+' días'}</div></div><div style="display:flex;gap:7px"><button class="secondary small" onclick="editAccount('${a.id}')">Ficha</button><button class="small" onclick="sendRenew('${a.id}')">Enviar renovación</button></div></div>`).join(''):'<div class="empty">¡Excelente! No tienes cuentas vencidas ni próximas a vencer.</div>'}
 function ownedAllocations(o){return accounts.filter(a=>a.owned_account_id===o.id&&!['Cancelado','Vencido'].includes(statusOf(a)))} 
 function ownedStatus(o){let d=dateDiff(o.expiry_date);return d<=0?'Vencida':d<=7?'Por vencer':'Vigente'}
